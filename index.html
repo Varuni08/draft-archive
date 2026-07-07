@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draft Archive — a from-scratch agentic video pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream: #FFFACD;
+    --paper: #FFFDF1;
+    --violet: #5F4A8B;
+    --violet-deep: #2A2140;
+    --violet-soft: #9184AC;
+    --gold-line: #E4D69C;
+    --ink: #372C52;
+    --ink-soft: #6C5E86;
+    --radius: 3px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap{
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  a{ color: inherit; }
+
+  .eyebrow{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .eyebrow .rule{ flex:0 0 40px; height:1px; background: var(--ink-soft); opacity:.5; }
+  .eyebrow.on-dark{ color: var(--violet-soft); }
+  .eyebrow.on-dark .rule{ background: var(--violet-soft); }
+
+  /* ---------- nav ---------- */
+  nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 26px 0;
+  }
+  .mark{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    font-weight:500;
+  }
+  .mark svg{ width:20px; height:20px; }
+  .nav-link{
+    text-decoration:none;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    border:1px solid var(--ink);
+    padding:9px 16px;
+    border-radius: var(--radius);
+    transition: background .15s ease, color .15s ease;
+  }
+  .nav-link:hover{ background: var(--ink); color: var(--cream); }
+
+  /* ---------- hero ---------- */
+  header.hero{ padding: 64px 0 96px; }
+  h1.display{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    font-size: clamp(58px, 10vw, 122px);
+    line-height: 0.98;
+    margin: 26px 0 10px;
+    color: var(--violet);
+    letter-spacing: -0.01em;
+  }
+  h1.display em{
+    font-style: italic;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .lede{
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin: 0 0 34px;
+  }
+  .cta-row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    letter-spacing:.04em;
+    padding: 13px 22px;
+    border-radius: var(--radius);
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    border:1px solid transparent;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{ transform: translateY(-1px); }
+  .btn-fill{ background: var(--violet); color: var(--cream); }
+  .btn-fill:hover{ box-shadow: 0 6px 0 var(--violet-deep); }
+  .btn-outline{ border-color: var(--ink); color: var(--ink); }
+  .btn-outline:hover{ box-shadow: 0 6px 0 var(--gold-line); }
+
+  /* ---------- pipeline / catalog section ---------- */
+  section.catalog{
+    background: var(--violet);
+    color: var(--cream);
+    padding: 88px 0 100px;
+  }
+  section.catalog h2{
+    font-family:'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(34px, 5vw, 48px);
+    margin: 20px 0 48px;
+    color: var(--cream);
+  }
+
+  .drawer{
+    position: relative;
+    padding-left: 34px;
+  }
+  .drawer::before{
+    content:"";
+    position:absolute;
+    left: 6px; top: 6px; bottom: 6px;
+    width: 1px;
+    background: repeating-linear-gradient(
+      to bottom, var(--violet-soft) 0 6px, transparent 6px 12px
+    );
+  }
+  .card{
+    position: relative;
+    background: var(--violet-deep);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius);
+    padding: 22px 26px;
+    margin-bottom: 16px;
+    display:grid;
+    grid-template-columns: 110px 150px 1fr;
+    gap: 18px;
+    align-items:center;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    left:-34px; top:50%;
+    width: 34px; height:1px;
+    background: var(--violet-soft);
+  }
+  .card .callno{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color: var(--violet-soft);
+    letter-spacing:.05em;
+  }
+  .card .stage{
+    font-family:'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--cream);
+  }
+  .card .desc{
+    font-size: 14px;
+    line-height:1.55;
+    color: #D9D0EC;
+  }
+  .card .badge{
+    justify-self:end;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    padding: 4px 9px;
+    border-radius: 20px;
+    border:1px solid var(--violet-soft);
+    color: var(--violet-soft);
+  }
+  .badge.free{ border-color:#B7E4B0; color:#B7E4B0; }
+  .badge.local{ border-color:#F0D98C; color:#F0D98C; }
+  .badge.api{ border-color:#F0AFAF; color:#F0AFAF; }
+
+  @media (max-width: 640px){
+    .card{ grid-template-columns: 1fr; row-gap:6px; }
+    .card .badge{ justify-self:start; }
+  }
+
+  /* ---------- runtime section ---------- */
+  section.runtime{ padding: 96px 0; }
+  section.runtime h2{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    font-size: clamp(32px, 4.5vw, 44px);
+    margin: 20px 0 48px;
+    color: var(--violet);
+  }
+  .grid3{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+  @media (max-width: 780px){ .grid3{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background: var(--paper);
+    border: 1px solid var(--gold-line);
+    border-radius: var(--radius);
+    padding: 26px 24px;
+  }
+  .panel .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color: var(--violet);
+    margin-bottom: 10px;
+    display:block;
+  }
+  .panel h3{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600;
+    font-size: 22px;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  .panel p{
+    font-size:14px;
+    line-height:1.6;
+    color: var(--ink-soft);
+    margin:0;
+  }
+
+  /* ---------- quickstart ---------- */
+  section.quickstart{ padding-bottom: 100px; }
+  section.quickstart h2{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    font-size: clamp(32px, 4.5vw, 44px);
+    margin: 20px 0 30px;
+    color: var(--violet);
+  }
+  .terminal{
+    background: var(--violet-deep);
+    border-radius: var(--radius);
+    padding: 28px 30px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13.5px;
+    line-height: 2;
+    color: #E7E1F3;
+    overflow-x:auto;
+  }
+  .terminal .c{ color: var(--violet-soft); }
+  .terminal .p{ color: #F0D98C; }
+
+  /* ---------- footer ---------- */
+  footer{
+    background: var(--violet-deep);
+    color: var(--violet-soft);
+    padding: 40px 0;
+  }
+  footer .row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:16px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+  footer a{ text-decoration:none; color: var(--cream); border-bottom:1px solid var(--violet-soft); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <div class="mark">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="4" width="20" height="16" rx="1" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M6 4V2.5M18 4V2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M2 9H22" stroke="currentColor" stroke-width="1.4"/>
+      </svg>
+      Draft&nbsp;Archive
+    </div>
+    <a class="nav-link" href="#" id="gh-link">View on GitHub →</a>
+  </nav>
+
+  <header class="hero">
+    <div class="eyebrow"><span class="rule"></span> PERSONAL PROJECT — VIDEO PRODUCTION</div>
+    <h1 class="display">Draft<br><em>Archive</em></h1>
+    <p class="lede">
+      A stage-based, agentic video pipeline you drive with an AI coding
+      assistant — research to render, built from scratch, running free by
+      default. No shared code, no copyleft baggage.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-fill" href="#">View source ↗</a>
+      <a class="btn btn-outline" href="#pipeline">See the pipeline ↓</a>
+    </div>
+  </header>
+</div>
+
+<section class="catalog" id="pipeline">
+  <div class="wrap">
+    <div class="eyebrow on-dark"><span class="rule"></span> CATALOG — SEVEN STAGES</div>
+    <h2>Every run, filed the same way.</h2>
+
+    <div class="drawer">
+      <div class="card">
+        <div class="callno">DA&nbsp;·&nbsp;01</div>
+        <div class="stage">Research</div>
+        <div class="desc">Gather source material for the topic — your own logic, plugged in.</div>
+        <div class="badge">open</div>
+      </div>
+      <div class="card">
+        <div class="callno">DA&nbsp;·&nbsp;02</div>
+        <div class="stage">Script</div>
+        <div class="desc">Template writer by default; Groq LLM writer when a free key is set.</div>
+        <div class="badge free">free</div>
+      </div>
+      <div class="card">
+        <div class="callno">DA&nbsp;·&nbsp;03</div>
+        <div class="stage">Voice</div>
+        <div class="desc">Piper renders narration to WAV, fully offline.</div>
+        <div class="badge local">local</div>
+      </div>
+      <div class="card">
+        <div class="callno">DA&nbsp;·&nbsp;04</div>
+        <div class="stage">Assets</div>
+        <div class="desc">Wikimedia Commons search for public-domain footage and stills.</div>
+        <div class="badge free">free</div>
+      </div>
+      <div class="card">
+        <div class="callno">DA&nbsp;·&nbsp;05</div>
+        <div class="stage">Compose</div>
+        <div class="desc">Remotion assembles narration, assets, and captions into a timeline.</div>
+        <div class="badge local">local</div>
+      </div>
+      <div class="card">
+        <div class="callno">DA&nbsp;·&nbsp;06</div>
+        <div class="stage">Render</div>
+        <div class="desc">FFmpeg muxes the final file from the composed timeline.</div>
+        <div class="badge local">local</div>
+      </div>
+      <div class="card">
+        <div class="callno">DA&nbsp;·&nbsp;07</div>
+        <div class="stage">Validate</div>
+        <div class="desc">ffprobe checks the final file actually has audio and video streams.</div>
+        <div class="badge local">local</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <section class="runtime">
+    <div class="eyebrow"><span class="rule"></span> RUNTIME POLICY</div>
+    <h2>Free tools win by default.</h2>
+    <div class="grid3">
+      <div class="panel">
+        <span class="tag">Default</span>
+        <h3>Zero cost</h3>
+        <p>The registry always prefers FREE and LOCAL tools over API ones, so a run costs nothing unless you say otherwise.</p>
+      </div>
+      <div class="panel">
+        <span class="tag">Optional</span>
+        <h3>Bring your own key</h3>
+        <p>Set GROQ_API_KEY in .env for LLM-written scripts. No key, no problem — it falls back automatically.</p>
+      </div>
+      <div class="panel">
+        <span class="tag">Always</span>
+        <h3>Permissive only</h3>
+        <p>Every wired-in dependency is MIT, LGPL, or public domain. Tracked in tools/LICENSES.md.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="quickstart">
+    <div class="eyebrow"><span class="rule"></span> QUICKSTART</div>
+    <h2>From clone to first render.</h2>
+    <div class="terminal">
+<span class="c"># 1. install</span><br>
+pip install -r requirements.txt<br>
+pip install piper-tts<br>
+<span class="c">cd</span> remotion-composer <span class="c">&&</span> npm install <span class="c">&&</span> <span class="c">cd</span> ..<br><br>
+<span class="c"># 2. add your free Groq key (optional)</span><br>
+cp .env.example .env<br><br>
+<span class="c"># 3. run it</span><br>
+python -m orchestrator.pipeline_engine <span class="p">pipelines/documentary.yaml</span> --topic <span class="p">"city life in the rain"</span>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap row">
+    <span>Draft Archive — no shared code, no AGPL exposure.</span>
+    <span><a href="#">tools/LICENSES.md</a> · <a href="#">README.md</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+name: documentary
+description: >
+  Real-footage documentary montage with narration, free-tier only.
+  research -> script -> voice -> assets -> compose -> render -> validate
+
+stages:
+  - name: script
+    tool_category: script
+    params:
+      tone: documentary
+      prefer_free: false        # if GROQ_API_KEY is set, use the real LLM
+                                 # script writer instead of the template one
+                                 # (falls back to template automatically
+                                 # either way if no key is set)
+
+  - name: voice
+    tool_category: tts
+    params:
+      voice: en_US-lessac-medium
+
+  - name: align
+    tool_category: align
+    params:
+      model_size: tiny        # tiny/base are fast enough on CPU; use "small"
+                               # for better accuracy if you don't mind the wait
+
+  - name: assets
+    tool_category: footage
+    params:
+      scene_queries:
+        - "city rain street"
+        - "rain window reflection"
+        - "umbrella pedestrians rain"
+
+  - name: compose
+    tool_category: compose
+    params:
+      composition_id: Documentary
+      show_captions: true      # set false to render clean, no burned-in captions
+
+  - name: render
+    tool_category: render
+    params: {}
