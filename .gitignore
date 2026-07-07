@@ -3,4 +3,5 @@
 __pycache__/
 *.pyc
 _work/
-remotion-composer/node_modules/remotion-composer/public/
+remotion-composer/node_modules/
+remotion-composer/public/
